@@ -1,77 +1,49 @@
 "use client";
 
-interface StreamingBubbleProps {
-  text: string;
-}
-
 function renderContent(text: string) {
-  const lines = text.split("\n");
-  return lines.map((line, i) => {
-    let html = line.replace(
-      /\*\*(.+?)\*\*/g,
-      '<strong class="text-zinc-100 font-semibold">$1</strong>'
-    );
-    html = html.replace(
-      /`(.+?)`/g,
-      '<code class="bg-zinc-800/60 px-1.5 py-0.5 rounded text-amber-300/90 text-[0.85em] font-mono">$1</code>'
-    );
-    if (line.startsWith("> ")) {
-      return (
-        <div
-          key={i}
-          className="border-l-2 border-zinc-600 pl-3 my-1 text-zinc-400 text-[0.92em]"
-          dangerouslySetInnerHTML={{ __html: html.slice(2) }}
-        />
-      );
-    }
-    if (line.startsWith("- ") || line.startsWith("* ")) {
-      return (
-        <div
-          key={i}
-          className="pl-4 my-0.5 text-zinc-300"
-          dangerouslySetInnerHTML={{ __html: "\u203A " + html.slice(2) }}
-        />
-      );
-    }
-    if (line.trim() === "") return <div key={i} className="h-2" />;
-    return (
-      <div key={i} className="my-0.5" dangerouslySetInnerHTML={{ __html: html }} />
-    );
+  return text.split("\n").map((line, i) => {
+    let html = line
+      .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e4e4e7;font-weight:600">$1</strong>')
+      .replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:4px;color:#fbbf24;font-size:0.85em;font-family:JetBrains Mono,monospace">$1</code>');
+    if (line.startsWith("> "))
+      return <div key={i} style={{ borderLeft: "2px solid rgba(255,255,255,0.1)", paddingLeft: 12, margin: "4px 0", color: "#a1a1aa", fontSize: "0.92em" }} dangerouslySetInnerHTML={{ __html: html.slice(2) }} />;
+    if (line.startsWith("- ") || line.startsWith("* "))
+      return <div key={i} style={{ paddingLeft: 16, margin: "2px 0", color: "#d4d4d8" }} dangerouslySetInnerHTML={{ __html: "\u203A " + html.slice(2) }} />;
+    if (line.trim() === "") return <div key={i} style={{ height: 8 }} />;
+    return <div key={i} style={{ margin: "2px 0" }} dangerouslySetInnerHTML={{ __html: html }} />;
   });
 }
 
-export function StreamingBubble({ text }: StreamingBubbleProps) {
+export function StreamingBubble({ text }: { text: string }) {
   return (
-    <div className="flex justify-start mb-4">
-      <div className="max-w-[85%] md:max-w-[70%] bg-zinc-900/40 border border-zinc-800/60 rounded-2xl rounded-bl-md px-4 py-3 backdrop-blur-sm">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center animate-pulse">
-            <span className="text-[9px] font-bold text-black">A</span>
+    <div className="flex justify-start">
+      <div
+        className="max-w-[85%] md:max-w-[75%] rounded-[20px] rounded-bl-lg px-4 py-3"
+        style={{
+          background: "rgba(255,255,255,0.02)",
+          border: "1px solid rgba(255,255,255,0.05)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03)",
+        }}
+      >
+        <div className="flex items-center gap-2 mb-2.5">
+          <div
+            className="w-5 h-5 rounded-full flex items-center justify-center animate-pulse"
+            style={{
+              background: "linear-gradient(135deg, #f59e0b, #ea580c)",
+              boxShadow: "0 2px 8px rgba(245,158,11,0.3)",
+            }}
+          >
+            <span style={{ fontSize: 9, fontWeight: 700, color: "#000" }}>A</span>
           </div>
-          <span className="text-[11px] font-medium text-zinc-500 tracking-wide uppercase">
-            Anoma
-          </span>
+          <span className="text-[11px] font-medium text-zinc-500 tracking-wide uppercase">Anoma</span>
           <div className="flex gap-0.5 ml-1">
-            <div
-              className="w-1 h-1 rounded-full bg-amber-500/60 animate-bounce"
-              style={{ animationDelay: "0ms" }}
-            />
-            <div
-              className="w-1 h-1 rounded-full bg-amber-500/60 animate-bounce"
-              style={{ animationDelay: "150ms" }}
-            />
-            <div
-              className="w-1 h-1 rounded-full bg-amber-500/60 animate-bounce"
-              style={{ animationDelay: "300ms" }}
-            />
+            <div className="w-1 h-1 rounded-full bg-amber-500/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+            <div className="w-1 h-1 rounded-full bg-amber-500/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+            <div className="w-1 h-1 rounded-full bg-amber-500/60 animate-bounce" style={{ animationDelay: "300ms" }} />
           </div>
         </div>
-        <div className="text-[14px] leading-relaxed text-zinc-300">
-          {text ? (
-            renderContent(text)
-          ) : (
-            <span className="text-zinc-600 italic">thinking...</span>
-          )}
+        <div className="text-[14px] leading-[1.65] text-zinc-300">
+          {text ? renderContent(text) : <span className="text-zinc-600 italic">thinking...</span>}
         </div>
       </div>
     </div>

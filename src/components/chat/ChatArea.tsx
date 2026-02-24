@@ -29,19 +29,20 @@ export function ChatArea({ messages, streamingText, isStreaming }: ChatAreaProps
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto space-y-5">
         {messages.length === 0 && !isStreaming && (
           <div className="flex items-center justify-center h-full min-h-[60vh]">
             <div className="text-center">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/10">
-                <span className="text-xl font-bold text-black">A</span>
+              <div
+                className="w-16 h-16 rounded-2xl amber-gradient flex items-center justify-center mx-auto mb-5"
+                style={{
+                  boxShadow: "0 12px 32px rgba(245,158,11,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
+                }}
+              >
+                <span className="text-2xl font-bold text-black">A</span>
               </div>
-              <h2 className="text-lg font-semibold text-zinc-200 mb-1">
-                Anoma Agent
-              </h2>
-              <p className="text-[13px] text-zinc-600">
-                Memory-enabled. Persistent across sessions.
-              </p>
+              <h2 className="text-lg font-semibold text-zinc-100 mb-1">Anoma Agent</h2>
+              <p className="text-[13px] text-zinc-600">Memory-enabled. Persistent across sessions.</p>
             </div>
           </div>
         )}
