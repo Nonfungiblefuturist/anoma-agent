@@ -1,64 +1,203 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useCallback, useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
+import { SessionSidebar } from "@/components/sidebar/SessionSidebar";
+import { ChatArea } from "@/components/chat/ChatArea";
+import { InputArea } from "@/components/chat/InputArea";
+import { DEFAULT_MODEL, MODELS } from "@/lib/models";
 
 export default function Home() {
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [streamingText, setStreamingText] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
+
+  // Load model preference from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("anoma-model");
+    if (saved && MODELS.some((m) => m.id === saved)) {
+      setSelectedModel(saved);
+    }
+  }, []);
+
+  const handleModelChange = useCallback((modelId: string) => {
+    setSelectedModel(modelId);
+    localStorage.setItem("anoma-model", modelId);
+  }, []);
+
+  const sessions = useQuery(api.sessions.list) ?? [];
+  const createSession = useMutation(api.sessions.create);
+  const activeSession = sessions.find((s) => s._id === activeSessionId);
+  const messages = useQuery(
+    api.messages.listBySession,
+    activeSessionId
+      ? { sessionId: activeSessionId as Id<"sessions"> }
+      : "skip"
+  );
+
+  // Auto-select first session
+  useEffect(() => {
+    if (!activeSessionId && sessions.length > 0) {
+      setActiveSessionId(sessions[0]._id);
+    }
+  }, [sessions, activeSessionId]);
+
+  const handleSend = useCallback(
+    async (userMessage: string) => {
+      let sessionId = activeSessionId;
+
+      if (!sessionId) {
+        sessionId = await createSession({
+          title:
+            userMessage.slice(0, 50) +
+            (userMessage.length > 50 ? "..." : ""),
+        });
+        setActiveSessionId(sessionId);
+      }
+
+      setIsStreaming(true);
+      setStreamingText("");
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId, userMessage, model: selectedModel }),
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error("No response body");
+
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            try {
+              const event = JSON.parse(line.slice(6));
+              if (event.type === "text") {
+                setStreamingText((prev) => prev + event.text);
+              } else if (event.type === "error") {
+                console.error("Agent error:", event.error);
+              }
+            } catch {
+              // ignore
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Stream error:", err);
+      } finally {
+        setIsStreaming(false);
+        setStreamingText("");
+      }
+    },
+    [activeSessionId, createSession, selectedModel]
+  );
+
+  const handleSelectSession = useCallback((id: string) => {
+    setActiveSessionId(id);
+    setStreamingText("");
+    setIsStreaming(false);
+  }, []);
+
+  const messageCount = messages?.length ?? 0;
+
+  const chatMessages = (messages ?? []).map((m) => ({
+    _id: m._id,
+    role: m.role,
+    content: m.content,
+    inputTokens: m.inputTokens ?? undefined,
+    outputTokens: m.outputTokens ?? undefined,
+    costUsd: m.costUsd ?? undefined,
+    createdAt: m.createdAt,
+  }));
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div
+      className="h-screen w-screen flex overflow-hidden"
+      style={{
+        background:
+          "radial-gradient(ellipse at 20% 0%, rgba(120,80,30,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(60,40,20,0.06) 0%, transparent 50%), #0a0a0b",
+      }}
+    >
+      <SessionSidebar
+        activeSessionId={activeSessionId}
+        onSelectSession={handleSelectSession}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      {/* Main */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800/40 bg-zinc-950/50 backdrop-blur-sm">
+          <button
+            className="md:hidden p-2 -ml-2 rounded-lg hover:bg-zinc-800/50 transition-colors"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-zinc-400"
+            >
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[14px] font-semibold text-zinc-200 truncate">
+              {activeSession?.title ?? "Anoma Agent"}
+            </h1>
+            <div className="text-[11px] text-zinc-600">
+              {MODELS.find((m) => m.id === selectedModel)?.label ?? selectedModel}
+              {messageCount > 0 && (
+                <>
+                  {" "}
+                  &middot; {messageCount} message
+                  {messageCount !== 1 && "s"}
+                </>
+              )}
+              {activeSession && activeSession.totalCostUsd > 0 && (
+                <> &middot; ${activeSession.totalCostUsd.toFixed(4)}</>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Chat area */}
+        <ChatArea
+          messages={chatMessages}
+          streamingText={streamingText}
+          isStreaming={isStreaming}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        {/* Input */}
+        <InputArea
+          onSend={handleSend}
+          disabled={isStreaming}
+          selectedModel={selectedModel}
+          onModelChange={handleModelChange}
+        />
       </main>
     </div>
   );

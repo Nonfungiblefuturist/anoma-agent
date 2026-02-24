@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "standalone",
+  serverExternalPackages: ["@anthropic-ai/sdk"],
+  turbopack: {
+    root: ".",
+  },
 };
 
 export default nextConfig;
