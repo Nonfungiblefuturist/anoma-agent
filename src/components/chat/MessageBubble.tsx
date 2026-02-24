@@ -16,7 +16,7 @@ function renderContent(text: string) {
   return text.split("\n").map((line, i) => {
     let html = line
       .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e4e4e7;font-weight:600">$1</strong>')
-      .replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:4px;color:#fbbf24;font-size:0.85em;font-family:JetBrains Mono,monospace">$1</code>');
+      .replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:4px;color:var(--accent-text);font-size:0.85em;font-family:JetBrains Mono,monospace">$1</code>');
     if (line.startsWith("> "))
       return <div key={i} style={{ borderLeft: "2px solid rgba(255,255,255,0.1)", paddingLeft: 12, margin: "4px 0", color: "#a1a1aa", fontSize: "0.92em" }} dangerouslySetInnerHTML={{ __html: html.slice(2) }} />;
     if (line.startsWith("\u203A "))
@@ -33,7 +33,6 @@ function formatTime(ts?: number): string {
   return new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-// Strip markdown for TTS
 function stripMarkdown(text: string): string {
   return text
     .replace(/\*\*(.+?)\*\*/g, "$1")
@@ -49,7 +48,6 @@ function SpeakerButton({ content }: { content: string }) {
 
   const handleTts = useCallback(async () => {
     if (ttsState === "playing") {
-      // Stop playback
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -77,16 +75,8 @@ function SpeakerButton({ content }: { content: string }) {
 
       const audio = new Audio(url);
       audioRef.current = audio;
-      audio.onended = () => {
-        setTtsState("idle");
-        URL.revokeObjectURL(url);
-        audioRef.current = null;
-      };
-      audio.onerror = () => {
-        setTtsState("idle");
-        URL.revokeObjectURL(url);
-        audioRef.current = null;
-      };
+      audio.onended = () => { setTtsState("idle"); URL.revokeObjectURL(url); audioRef.current = null; };
+      audio.onerror = () => { setTtsState("idle"); URL.revokeObjectURL(url); audioRef.current = null; };
       await audio.play();
       setTtsState("playing");
     } catch {
@@ -97,7 +87,10 @@ function SpeakerButton({ content }: { content: string }) {
   return (
     <button
       onClick={handleTts}
-      className="p-1 rounded-lg hover:bg-white/[0.06] transition-colors text-zinc-500 hover:text-amber-400"
+      className="p-1 rounded-lg hover:bg-white/[0.06] transition-colors text-zinc-500"
+      style={{ color: undefined }}
+      onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-text)")}
+      onMouseLeave={(e) => (e.currentTarget.style.color = "")}
       title={ttsState === "playing" ? "Stop" : "Read aloud"}
     >
       {ttsState === "loading" ? (
@@ -126,9 +119,7 @@ export function MessageBubble({ role, content, inputTokens, outputTokens, costUs
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
         className={`max-w-[85%] md:max-w-[75%] px-4 py-3 ${
-          isUser
-            ? "rounded-[20px] rounded-br-lg glass-panel"
-            : "rounded-[20px] rounded-bl-lg"
+          isUser ? "rounded-[20px] rounded-br-lg glass-panel" : "rounded-[20px] rounded-bl-lg"
         }`}
         style={
           isUser
@@ -144,10 +135,7 @@ export function MessageBubble({ role, content, inputTokens, outputTokens, costUs
           <div className="flex items-center gap-2 mb-2.5">
             <div
               className="w-5 h-5 rounded-full flex items-center justify-center"
-              style={{
-                background: "linear-gradient(135deg, #f59e0b, #ea580c)",
-                boxShadow: "0 2px 8px rgba(245,158,11,0.3)",
-              }}
+              style={{ background: "var(--accent-gradient-2)", boxShadow: `0 2px 8px var(--accent-shadow-strong)` }}
             >
               <span style={{ fontSize: 9, fontWeight: 700, color: "#000" }}>A</span>
             </div>

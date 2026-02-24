@@ -36,7 +36,7 @@ export function PasswordGate() {
       className="flex items-center justify-center h-screen"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.06) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(20,20,22,1) 0%, #0a0a0b 100%)",
+          "radial-gradient(ellipse at 50% 30%, var(--accent-glow) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(20,20,22,1) 0%, #0a0a0b 100%)",
       }}
     >
       <form
@@ -46,8 +46,8 @@ export function PasswordGate() {
         <div
           className="w-14 h-14 rounded-2xl flex items-center justify-center mb-2"
           style={{
-            background: "linear-gradient(135deg, #f59e0b, #ea580c, #e11d48)",
-            boxShadow: "0 12px 32px rgba(245,158,11,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
+            background: "var(--accent-gradient)",
+            boxShadow: `0 12px 32px var(--accent-shadow), inset 0 1px 0 rgba(255,255,255,0.15)`,
           }}
         >
           <span className="text-xl font-bold text-black">A</span>
@@ -59,7 +59,7 @@ export function PasswordGate() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
           autoFocus
-          className="w-full rounded-2xl px-4 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/30 transition-colors glass-input"
+          className="w-full rounded-2xl px-4 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none transition-colors glass-input"
           style={{ background: "rgba(255,255,255,0.02)" }}
         />
         {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -68,9 +68,14 @@ export function PasswordGate() {
           disabled={loading || !password}
           className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
             password
-              ? "text-black bg-gradient-to-r from-amber-400 to-orange-500 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98]"
+              ? "text-black hover:scale-[1.02] active:scale-[0.98]"
               : "text-zinc-500 bg-white/[0.04] cursor-not-allowed"
           }`}
+          style={
+            password
+              ? { background: "var(--accent-gradient-2)", boxShadow: `0 8px 24px var(--accent-shadow), inset 0 1px 0 rgba(255,255,255,0.15)` }
+              : undefined
+          }
         >
           {loading ? "..." : "Enter"}
         </button>

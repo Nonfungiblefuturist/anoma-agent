@@ -3,6 +3,20 @@
 :root {
   --background: #0a0a0b;
   --foreground: #e4e4e7;
+
+  /* Accent color system — defaults (amber), overridden by AccentProvider */
+  --accent-primary: #f59e0b;
+  --accent-secondary: #ea580c;
+  --accent-tertiary: #e11d48;
+  --accent-gradient: linear-gradient(135deg, #f59e0b, #ea580c, #e11d48);
+  --accent-gradient-2: linear-gradient(135deg, #f59e0b, #ea580c);
+  --accent-shadow: rgba(245, 158, 11, 0.2);
+  --accent-shadow-strong: rgba(245, 158, 11, 0.3);
+  --accent-glow: rgba(245, 158, 11, 0.08);
+  --accent-text: #fbbf24;
+  --accent-badge-bg: rgba(245, 158, 11, 0.1);
+  --accent-badge-text: #f59e0b;
+  --accent-dot: #f59e0b;
 }
 
 @theme inline {
@@ -58,9 +72,15 @@ body {
 }
 
 .glass-glow {
-  box-shadow: 0 0 60px rgba(245, 158, 11, 0.08);
+  box-shadow: 0 0 60px var(--accent-glow);
 }
 
 .amber-gradient {
-  background: linear-gradient(135deg, #f59e0b, #ea580c, #e11d48);
+  background: var(--accent-gradient);
+}
+
+/* Toast animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }

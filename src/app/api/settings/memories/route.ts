@@ -20,6 +20,24 @@ export async function GET() {
   }
 }
 
+export async function POST(req: NextRequest) {
+  try {
+    const { type, content, tags } = await req.json();
+    if (!content) {
+      return NextResponse.json({ error: "content is required" }, { status: 400 });
+    }
+    const convex = getConvexClient();
+    const id = await convex.mutation(api.memories.save, {
+      type: type || "persistent",
+      content,
+      tags: tags || [],
+    });
+    return NextResponse.json({ ok: true, id });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
   const convex = getConvexClient();

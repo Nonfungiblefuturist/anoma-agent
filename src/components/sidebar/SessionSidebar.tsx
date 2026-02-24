@@ -64,8 +64,8 @@ export function SessionSidebar({ activeSessionId, onSelectSession, open, onClose
             <div
               className="w-10 h-10 rounded-2xl flex items-center justify-center"
               style={{
-                background: "linear-gradient(135deg, #f59e0b, #ea580c, #e11d48)",
-                boxShadow: "0 8px 24px rgba(245,158,11,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
+                background: "var(--accent-gradient)",
+                boxShadow: `0 8px 24px var(--accent-shadow), inset 0 1px 0 rgba(255,255,255,0.15)`,
               }}
             >
               <span className="text-sm font-bold text-black tracking-tight">A</span>

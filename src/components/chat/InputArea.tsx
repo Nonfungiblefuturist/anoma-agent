@@ -40,13 +40,10 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
     el.style.height = Math.min(el.scrollHeight, 140) + "px";
   };
 
-  // Close dropdown on outside click
   useEffect(() => {
     if (!modelMenuOpen) return;
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setModelMenuOpen(false);
-      }
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setModelMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -57,7 +54,6 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
   return (
     <div className="px-4 pb-5 pt-2">
       <div className="max-w-3xl mx-auto relative" ref={containerRef}>
-        {/* Model dropdown — positioned above the input bar */}
         {modelMenuOpen && (
           <div
             className="absolute bottom-full left-4 mb-3 w-52 rounded-2xl py-1 z-50"
@@ -81,10 +77,7 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] font-medium text-zinc-200">{m.label}</span>
                   {m.id === selectedModel && (
-                    <div
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ background: "linear-gradient(135deg, #f59e0b, #ea580c)", boxShadow: "0 0 6px rgba(245,158,11,0.5)" }}
-                    />
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--accent-gradient-2)", boxShadow: `0 0 6px var(--accent-shadow-strong)` }} />
                   )}
                 </div>
                 <div className="text-[11px] text-zinc-500 mt-0.5">{m.description}</div>
@@ -93,13 +86,9 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
           </div>
         )}
 
-        {/* Input bar */}
         <div
           className="relative rounded-[20px] glass-panel transition-all"
-          style={{
-            background: "rgba(255,255,255,0.025)",
-            boxShadow: "0 8px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)",
-          }}
+          style={{ background: "rgba(255,255,255,0.025)", boxShadow: "0 8px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)" }}
         >
           <textarea
             ref={textareaRef}
@@ -122,10 +111,7 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
                 {currentModel.label}
-                <svg
-                  width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-                  style={{ transform: modelMenuOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
-                >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: modelMenuOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </button>
@@ -134,17 +120,10 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
             <button
               onClick={handleSend}
               disabled={!sendActive}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                sendActive
-                  ? "shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:scale-105 active:scale-95"
-                  : "cursor-not-allowed"
-              }`}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${sendActive ? "hover:scale-105 active:scale-95" : "cursor-not-allowed"}`}
               style={
                 sendActive
-                  ? {
-                      background: "linear-gradient(135deg, #f59e0b, #ea580c)",
-                      boxShadow: "0 4px 16px rgba(245,158,11,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
-                    }
+                  ? { background: "var(--accent-gradient-2)", boxShadow: `0 4px 16px var(--accent-shadow-strong), inset 0 1px 0 rgba(255,255,255,0.15)` }
                   : { background: "rgba(255,255,255,0.04)" }
               }
             >

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { PasswordGate } from "@/components/auth/PasswordGate";
+import { ClientProviders } from "@/components/providers/ClientProviders";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -56,11 +57,13 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {isAuthenticated ? (
-          <ConvexClientProvider>{children}</ConvexClientProvider>
-        ) : (
-          <PasswordGate />
-        )}
+        <ClientProviders>
+          {isAuthenticated ? (
+            <ConvexClientProvider>{children}</ConvexClientProvider>
+          ) : (
+            <PasswordGate />
+          )}
+        </ClientProviders>
         <script
           dangerouslySetInnerHTML={{
             __html: `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}`,

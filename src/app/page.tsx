@@ -26,10 +26,21 @@ export default function Home() {
     activeSessionId ? { sessionId: activeSessionId as Id<"sessions"> } : "skip"
   );
 
-  // Load model from localStorage
+  // Load model from localStorage, fallback to config API default
   useEffect(() => {
     const saved = localStorage.getItem("anoma-model");
-    if (saved && MODELS.some((m) => m.id === saved)) setSelectedModel(saved);
+    if (saved && MODELS.some((m) => m.id === saved)) {
+      setSelectedModel(saved);
+    } else {
+      fetch("/api/settings/config")
+        .then((r) => r.json())
+        .then((cfg) => {
+          if (cfg.defaultModel && MODELS.some((m) => m.id === cfg.defaultModel)) {
+            setSelectedModel(cfg.defaultModel);
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const handleModelChange = useCallback((modelId: string) => {

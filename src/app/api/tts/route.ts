@@ -1,7 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 const SARVAM_URL = "https://api.sarvam.ai/text-to-speech";
 const MAX_TEXT_LENGTH = 2500;
+const CONFIG_PATH = join(process.cwd(), ".agent", "config.json");
+
+function getVoiceConfig(): { speaker: string; language: string } {
+  try {
+    const config = JSON.parse(readFileSync(CONFIG_PATH, "utf-8"));
+    return {
+      speaker: config.voice?.speaker || "ritu",
+      language: config.voice?.language || "en-IN",
+    };
+  } catch {
+    return { speaker: "ritu", language: "en-IN" };
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "SARVAM_API_KEY not configured" }, { status: 500 });
     }
 
-    // Truncate to Sarvam's 2500 char limit
+    const voice = getVoiceConfig();
     const truncated = text.length > MAX_TEXT_LENGTH ? text.slice(0, MAX_TEXT_LENGTH) : text;
 
     const response = await fetch(SARVAM_URL, {
@@ -26,8 +41,8 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         inputs: [truncated],
-        target_language_code: "en-IN",
-        speaker: "ritu",
+        target_language_code: voice.language,
+        speaker: voice.speaker,
         model: "bulbul:v3",
         enable_preprocessing: true,
       }),
