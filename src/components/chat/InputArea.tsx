@@ -53,9 +53,46 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
 
   return (
     <div className="px-4 pb-5 pt-2">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto relative">
+        {/* Model dropdown — rendered outside the overflow container */}
+        {modelMenuOpen && (
+          <div
+            ref={menuRef}
+            className="absolute bottom-full left-4 mb-3 w-52 rounded-2xl py-1 z-[60]"
+            style={{
+              background: "rgba(14,14,16,0.95)",
+              backdropFilter: "blur(40px)",
+              WebkitBackdropFilter: "blur(40px)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 16px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
+            }}
+          >
+            <div className="px-3 py-2 text-[10px] font-medium text-zinc-600 tracking-[0.12em] uppercase">Model</div>
+            {MODELS.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => { onModelChange(m.id); setModelMenuOpen(false); }}
+                className={`w-full text-left px-3 py-2.5 transition-colors ${
+                  m.id === selectedModel ? "bg-white/[0.06]" : "hover:bg-white/[0.04]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] font-medium text-zinc-200">{m.label}</span>
+                  {m.id === selectedModel && (
+                    <div
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ background: "linear-gradient(135deg, #f59e0b, #ea580c)", boxShadow: "0 0 6px rgba(245,158,11,0.5)" }}
+                    />
+                  )}
+                </div>
+                <div className="text-[11px] text-zinc-500 mt-0.5">{m.description}</div>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div
-          className="relative rounded-[20px] overflow-hidden glass-panel transition-all"
+          className="relative rounded-[20px] glass-panel transition-all"
           style={{
             background: "rgba(255,255,255,0.025)",
             boxShadow: "0 8px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)",
@@ -69,12 +106,12 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
             placeholder="Ask anything..."
             disabled={disabled}
             rows={1}
-            className="w-full bg-transparent text-[14px] text-zinc-200 placeholder-zinc-600 px-5 pt-4 pb-12 resize-none focus:outline-none"
+            className="w-full bg-transparent text-[14px] text-zinc-200 placeholder-zinc-600 px-5 pt-4 pb-12 resize-none focus:outline-none rounded-[20px]"
             style={{ minHeight: 56, maxHeight: 140 }}
           />
 
           <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-2.5">
-            <div className="flex items-center gap-2" ref={menuRef}>
+            <div className="flex items-center gap-2">
               <div className="h-4 w-px bg-white/[0.06]" />
               <button
                 onClick={() => setModelMenuOpen((v) => !v)}
@@ -89,40 +126,6 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </button>
-
-              {modelMenuOpen && (
-                <div
-                  className="absolute bottom-full left-4 mb-2 w-52 rounded-2xl overflow-hidden py-1 z-50"
-                  style={{
-                    background: "rgba(14,14,16,0.95)",
-                    backdropFilter: "blur(40px)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    boxShadow: "0 16px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
-                  }}
-                >
-                  <div className="px-3 py-2 text-[10px] font-medium text-zinc-600 tracking-[0.12em] uppercase">Model</div>
-                  {MODELS.map((m) => (
-                    <button
-                      key={m.id}
-                      onClick={() => { onModelChange(m.id); setModelMenuOpen(false); }}
-                      className={`w-full text-left px-3 py-2.5 transition-colors ${
-                        m.id === selectedModel ? "bg-white/[0.06]" : "hover:bg-white/[0.04]"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[13px] font-medium text-zinc-200">{m.label}</span>
-                        {m.id === selectedModel && (
-                          <div
-                            className="w-1.5 h-1.5 rounded-full"
-                            style={{ background: "linear-gradient(135deg, #f59e0b, #ea580c)", boxShadow: "0 0 6px rgba(245,158,11,0.5)" }}
-                          />
-                        )}
-                      </div>
-                      <div className="text-[11px] text-zinc-500 mt-0.5">{m.description}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             <button

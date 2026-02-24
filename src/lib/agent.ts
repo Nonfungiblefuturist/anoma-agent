@@ -8,7 +8,7 @@ import {
 } from "./memory-tools";
 import { MODELS, DEFAULT_MODEL } from "./models";
 
-function buildSystemPrompt(): string {
+function buildBaseSystemPrompt(): string {
   const soul = loadSoul();
   const skills = loadSkills();
 
@@ -31,6 +31,28 @@ Be proactive about saving memories — don't wait to be asked.
 ${skills}`;
 }
 
+async function fetchRagContext(query: string): Promise<string> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/rag`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    if (!data.context || data.context.length === 0) return "";
+
+    const chunks = data.context
+      .map((c: { source: string; content: string }) => `[${c.source}]\n${c.content}`)
+      .join("\n\n---\n\n");
+
+    return `\n\n# Retrieved Context (RAG)\n\nThe following context was retrieved from project documents and skills based on the user's query. Use it to inform your response:\n\n${chunks}`;
+  } catch {
+    return "";
+  }
+}
+
 export function createAnthropicClient(): Anthropic {
   return new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
@@ -44,7 +66,6 @@ function getCost(
 ): number {
   const model = MODELS.find((m) => m.id === modelId);
   if (!model) {
-    // fallback to sonnet pricing
     return (inputTokens * 3) / 1_000_000 + (outputTokens * 15) / 1_000_000;
   }
   return (
@@ -67,7 +88,16 @@ export async function* runAgentStreaming(
   | { type: "error"; error: string }
 > {
   const client = createAnthropicClient();
-  const systemPrompt = buildSystemPrompt();
+  const basePrompt = buildBaseSystemPrompt();
+
+  // Extract the latest user message for RAG query
+  const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+  const ragQuery =
+    lastUserMsg && typeof lastUserMsg.content === "string"
+      ? lastUserMsg.content
+      : "";
+  const ragContext = ragQuery ? await fetchRagContext(ragQuery) : "";
+  const systemPrompt = basePrompt + ragContext;
 
   let totalInputTokens = 0;
   let totalOutputTokens = 0;
