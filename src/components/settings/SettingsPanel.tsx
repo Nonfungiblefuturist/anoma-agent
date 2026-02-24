@@ -6,6 +6,7 @@ interface Skill {
   name: string;
   file: string;
   content: string;
+  enabled: boolean;
 }
 
 interface Memory {
@@ -20,6 +21,7 @@ interface EnvVar {
   key: string;
   value: string;
   sensitive: boolean;
+  masked: boolean;
 }
 
 interface SettingsPanelProps {
@@ -45,28 +47,26 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
 
   // Env
   const [envVars, setEnvVars] = useState<EnvVar[]>([]);
-  const [showSensitive, setShowSensitive] = useState<Record<string, boolean>>(
-    {}
-  );
 
   // Fetch data when opening
   useEffect(() => {
     if (!open) return;
     fetch("/api/settings/soul")
       .then((r) => r.json())
-      .then((d) => {
-        setSoulText(d.content);
-        setSoulDirty(false);
-      });
+      .then((d) => { setSoulText(d.content); setSoulDirty(false); })
+      .catch(() => {});
     fetch("/api/settings/skills")
       .then((r) => r.json())
-      .then((d) => setSkills(d.skills));
+      .then((d) => setSkills(d.skills.map((s: Skill) => ({ ...s, enabled: true }))))
+      .catch(() => {});
     fetch("/api/settings/memories")
       .then((r) => r.json())
-      .then((d) => setMemories(d.memories));
+      .then((d) => setMemories(d.memories))
+      .catch(() => {});
     fetch("/api/settings/env")
       .then((r) => r.json())
-      .then((d) => setEnvVars(d.vars));
+      .then((d) => setEnvVars(d.vars.map((v: EnvVar) => ({ ...v, masked: v.sensitive }))))
+      .catch(() => {});
   }, [open]);
 
   const saveSoul = useCallback(async () => {
@@ -88,9 +88,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
       body: JSON.stringify({ file: editingSkill.file, content: skillContent }),
     });
     setSkills((prev) =>
-      prev.map((s) =>
-        s.file === editingSkill.file ? { ...s, content: skillContent } : s
-      )
+      prev.map((s) => s.file === editingSkill.file ? { ...s, content: skillContent } : s)
     );
     setEditingSkill(null);
   }, [editingSkill, skillContent]);
@@ -110,14 +108,11 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
     { id: "soul" as const, label: "Soul", icon: EditIcon },
     { id: "skills" as const, label: "Skills", icon: FileIcon },
     { id: "memory" as const, label: "Memory", icon: MemoryIcon },
-    { id: "env" as const, label: "Config", icon: GearIcon },
+    { id: "env" as const, label: "Config", icon: SettingsIcon },
   ];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
         className="relative w-full max-w-2xl max-h-[80vh] rounded-3xl overflow-hidden glass-panel"
@@ -128,27 +123,16 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             <div
-              className="w-8 h-8 rounded-xl amber-gradient flex items-center justify-center"
-              style={{
-                boxShadow:
-                  "0 8px 24px rgba(245,158,11,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
-              }}
+              className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 via-orange-400 to-rose-500 flex items-center justify-center shadow-lg shadow-amber-500/20"
             >
               <span className="text-xs font-bold text-black">A</span>
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-zinc-100">
-                Agent Settings
-              </h2>
-              <p className="text-[10px] text-zinc-500">
-                Edit personality, skills & config
-              </p>
+              <h2 className="text-sm font-semibold text-zinc-100">Agent Settings</h2>
+              <p className="text-[10px] text-zinc-500">Edit personality, skills & config</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl hover:bg-white/[0.06] transition-colors text-zinc-400 hover:text-zinc-200"
-          >
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/[0.06] transition-colors text-zinc-400 hover:text-zinc-200">
             <CloseIcon />
           </button>
         </div>
@@ -158,10 +142,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
           {tabs.map((t) => (
             <button
               key={t.id}
-              onClick={() => {
-                setTab(t.id);
-                setEditingSkill(null);
-              }}
+              onClick={() => { setTab(t.id); setEditingSkill(null); }}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium transition-all ${
                 tab === t.id
                   ? "bg-white/[0.08] text-zinc-100 border border-white/[0.1] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
@@ -180,15 +161,11 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
           {tab === "soul" && (
             <div className="space-y-3">
               <p className="text-[11px] text-zinc-500 mb-3">
-                Edit SOUL.md — defines your agent&apos;s personality, context,
-                and communication style.
+                Edit SOUL.md &mdash; defines your agent&apos;s personality, context, and communication style.
               </p>
               <textarea
                 value={soulText}
-                onChange={(e) => {
-                  setSoulText(e.target.value);
-                  setSoulDirty(true);
-                }}
+                onChange={(e) => { setSoulText(e.target.value); setSoulDirty(true); }}
                 className="w-full h-64 rounded-2xl px-4 py-3 text-[13px] text-zinc-200 resize-none focus:outline-none focus:border-amber-500/30 transition-colors font-mono leading-relaxed glass-input"
                 style={{ background: "rgba(255,255,255,0.02)" }}
               />
@@ -211,37 +188,49 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
           {/* Skills Tab — List */}
           {tab === "skills" && !editingSkill && (
             <div className="space-y-2">
-              <p className="text-[11px] text-zinc-500 mb-3">
-                Manage agent skills — edit or view skill definitions.
-              </p>
-              {skills.map((skill) => (
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] text-zinc-500">
+                  Manage agent skills &mdash; toggle, edit, or add new ones.
+                </p>
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium text-zinc-300 transition-all glass-button hover:bg-white/[0.08]">
+                  <PlusIcon /> Add Skill
+                </button>
+              </div>
+              {skills.map((skill, idx) => (
                 <div
                   key={skill.name}
-                  className="flex items-center justify-between p-3 rounded-2xl glass-panel glass-panel-hover"
+                  className="flex items-center justify-between p-3 rounded-2xl transition-all glass-panel glass-panel-hover"
                   style={{ background: "rgba(255,255,255,0.02)" }}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-medium text-zinc-200">
-                        {skill.name}
-                      </span>
-                      <span className="text-[10px] text-zinc-600 font-mono">
-                        {skill.file}
-                      </span>
+                      <span className="text-[13px] font-medium text-zinc-200">{skill.name}</span>
+                      <span className="text-[10px] text-zinc-600 font-mono">{skill.file}</span>
                     </div>
-                    <p className="text-[11px] text-zinc-500 mt-0.5 truncate">
-                      {skill.content.split("\n")[0]}
-                    </p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5 truncate">{skill.content.split("\n")[0]}</p>
                   </div>
-                  <button
-                    onClick={() => {
-                      setEditingSkill(skill);
-                      setSkillContent(skill.content);
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors text-zinc-500 hover:text-zinc-300"
-                  >
-                    <EditIcon />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setEditingSkill(skill); setSkillContent(skill.content); }}
+                      className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors text-zinc-500 hover:text-zinc-300"
+                    >
+                      <EditIcon />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const updated = [...skills];
+                        updated[idx] = { ...skill, enabled: !skill.enabled };
+                        setSkills(updated);
+                      }}
+                      className={`w-9 h-5 rounded-full transition-all relative ${
+                        skill.enabled ? "bg-amber-500/80" : "bg-zinc-700"
+                      }`}
+                    >
+                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                        skill.enabled ? "translate-x-4" : "translate-x-0.5"
+                      }`} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -251,15 +240,10 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
           {tab === "skills" && editingSkill && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setEditingSkill(null)}
-                  className="text-zinc-500 hover:text-zinc-300 text-[12px]"
-                >
+                <button onClick={() => setEditingSkill(null)} className="text-zinc-500 hover:text-zinc-300 text-[12px]">
                   &larr; Back
                 </button>
-                <span className="text-[13px] font-medium text-zinc-200">
-                  {editingSkill.name}
-                </span>
+                <span className="text-[13px] font-medium text-zinc-200">{editingSkill.name}</span>
               </div>
               <textarea
                 value={skillContent}
@@ -268,10 +252,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                 style={{ background: "rgba(255,255,255,0.02)" }}
               />
               <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setEditingSkill(null)}
-                  className="px-4 py-2 rounded-xl text-[12px] font-medium text-zinc-400 glass-button"
-                >
+                <button onClick={() => setEditingSkill(null)} className="px-4 py-2 rounded-xl text-[12px] font-medium text-zinc-400 glass-button">
                   Cancel
                 </button>
                 <button
@@ -291,46 +272,28 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                 View and manage stored memories. These persist across sessions.
               </p>
               {memories.length === 0 && (
-                <p className="text-[12px] text-zinc-600 text-center py-8">
-                  No memories stored yet.
-                </p>
+                <p className="text-[12px] text-zinc-600 text-center py-8">No memories stored yet.</p>
               )}
               {memories.map((mem) => (
-                <div
-                  key={mem.id}
-                  className="p-3 rounded-2xl glass-panel"
-                  style={{ background: "rgba(255,255,255,0.02)" }}
-                >
+                <div key={mem.id} className="p-3 rounded-2xl glass-panel" style={{ background: "rgba(255,255,255,0.02)" }}>
                   <div className="flex items-center justify-between mb-1">
-                    <span
-                      className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                        mem.type === "persistent"
-                          ? "bg-amber-500/10 text-amber-400"
-                          : mem.type === "archival"
-                            ? "bg-purple-500/10 text-purple-400"
-                            : "bg-blue-500/10 text-blue-400"
-                      }`}
-                    >
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                      mem.type === "persistent"
+                        ? "bg-amber-500/10 text-amber-400"
+                        : mem.type === "archival"
+                          ? "bg-purple-500/10 text-purple-400"
+                          : "bg-blue-500/10 text-blue-400"
+                    }`}>
                       {mem.type}
                     </span>
-                    <button
-                      onClick={() => deleteMemory(mem.id)}
-                      className="text-zinc-600 hover:text-red-400 transition-colors text-[11px]"
-                    >
+                    <button onClick={() => deleteMemory(mem.id)} className="text-zinc-600 hover:text-red-400 transition-colors text-[11px]">
                       &times;
                     </button>
                   </div>
-                  <p className="text-[13px] text-zinc-300 my-1">
-                    {mem.content}
-                  </p>
+                  <p className="text-[13px] text-zinc-300 my-1">{mem.content}</p>
                   <div className="flex gap-1 mt-1.5">
                     {mem.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-[10px] text-zinc-500 bg-white/[0.04] px-1.5 py-0.5 rounded"
-                      >
-                        {tag}
-                      </span>
+                      <span key={tag} className="text-[10px] text-zinc-500 bg-white/[0.04] px-1.5 py-0.5 rounded">{tag}</span>
                     ))}
                   </div>
                 </div>
@@ -338,47 +301,49 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             </div>
           )}
 
-          {/* Env Tab */}
+          {/* Config Tab */}
           {tab === "env" && (
             <div className="space-y-3">
               <p className="text-[11px] text-zinc-500 mb-3">
-                Environment variables. Sensitive keys are partially masked.
+                Environment variables. Changes require redeployment on Railway.
               </p>
-              {envVars.map((v) => (
-                <div
-                  key={v.key}
-                  className="p-3 rounded-2xl glass-panel"
-                  style={{ background: "rgba(255,255,255,0.02)" }}
-                >
-                  <div className="text-[11px] font-mono text-amber-400/80 mb-1">
-                    {v.key}
-                  </div>
+              {envVars.map((v, i) => (
+                <div key={v.key} className="p-3 rounded-2xl glass-panel" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-[11px] font-mono text-amber-400/80 mb-1">{v.key}</div>
                   <div className="flex items-center gap-2">
-                    <span className="flex-1 text-[13px] text-zinc-300 font-mono truncate">
-                      {v.sensitive && !showSensitive[v.key]
-                        ? v.value
-                        : v.value}
-                    </span>
+                    <input
+                      type={v.masked ? "password" : "text"}
+                      value={v.value}
+                      onChange={(e) => {
+                        const updated = [...envVars];
+                        updated[i] = { ...v, value: e.target.value };
+                        setEnvVars(updated);
+                      }}
+                      className="flex-1 bg-transparent text-[13px] text-zinc-300 font-mono focus:outline-none"
+                    />
                     {v.sensitive && (
                       <button
-                        onClick={() =>
-                          setShowSensitive((prev) => ({
-                            ...prev,
-                            [v.key]: !prev[v.key],
-                          }))
-                        }
+                        onClick={() => {
+                          const updated = [...envVars];
+                          updated[i] = { ...v, masked: !v.masked };
+                          setEnvVars(updated);
+                        }}
                         className="text-[10px] text-zinc-500 hover:text-zinc-300 px-2 py-1 rounded-lg hover:bg-white/[0.04] transition-colors"
                       >
-                        {showSensitive[v.key] ? "Hide" : "Show"}
+                        {v.masked ? "Show" : "Hide"}
                       </button>
                     )}
                   </div>
                 </div>
               ))}
+              <div className="flex items-center gap-2 mt-4">
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium text-zinc-300 glass-button hover:bg-white/[0.08]">
+                  <PlusIcon /> Add Variable
+                </button>
+              </div>
               <div className="mt-4 p-3 rounded-2xl border border-amber-500/10 bg-amber-500/[0.03]">
                 <p className="text-[11px] text-amber-400/80">
-                  Env changes via API update .env.local. Railway deploys use
-                  their own env vars set in the dashboard.
+                  Env changes made here will update via API. For Railway-hosted deploys, changes trigger automatic redeployment.
                 </p>
               </div>
             </div>
@@ -394,8 +359,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
 function CloseIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   );
 }
@@ -422,18 +386,25 @@ function MemoryIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
       <rect x="2" y="6" width="20" height="12" rx="2" />
-      <line x1="6" y1="2" x2="6" y2="6" />
-      <line x1="18" y1="2" x2="18" y2="6" />
+      <line x1="6" y1="2" x2="6" y2="6" /><line x1="18" y1="2" x2="18" y2="6" />
       <line x1="2" y1="12" x2="22" y2="12" />
     </svg>
   );
 }
 
-function GearIcon() {
+function SettingsIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
       <circle cx="12" cy="12" r="3" />
       <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   );
 }

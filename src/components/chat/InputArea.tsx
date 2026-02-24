@@ -129,7 +129,9 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
               onClick={handleSend}
               disabled={!sendActive}
               className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                sendActive ? "hover:scale-105 active:scale-95" : "cursor-not-allowed"
+                sendActive
+                  ? "shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:scale-105 active:scale-95"
+                  : "cursor-not-allowed"
               }`}
               style={
                 sendActive

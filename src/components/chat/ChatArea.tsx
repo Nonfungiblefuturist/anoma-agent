@@ -34,8 +34,9 @@ export function ChatArea({ messages, streamingText, isStreaming }: ChatAreaProps
           <div className="flex items-center justify-center h-full min-h-[60vh]">
             <div className="text-center">
               <div
-                className="w-16 h-16 rounded-2xl amber-gradient flex items-center justify-center mx-auto mb-5"
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
                 style={{
+                  background: "linear-gradient(135deg, #f59e0b, #ea580c, #e11d48)",
                   boxShadow: "0 12px 32px rgba(245,158,11,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
                 }}
               >

@@ -117,6 +117,7 @@ export default function Home() {
     <div
       className="h-screen w-screen flex overflow-hidden font-sans text-zinc-300"
       style={{
+        fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif",
         background:
           "radial-gradient(ellipse at 15% -10%, rgba(245,158,11,0.04) 0%, transparent 50%), radial-gradient(ellipse at 85% 110%, rgba(168,85,247,0.03) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(20,20,22,1) 0%, #0a0a0b 100%)",
       }}

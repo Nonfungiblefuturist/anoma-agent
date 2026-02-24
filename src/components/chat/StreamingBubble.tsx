@@ -7,8 +7,10 @@ function renderContent(text: string) {
       .replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:4px;color:#fbbf24;font-size:0.85em;font-family:JetBrains Mono,monospace">$1</code>');
     if (line.startsWith("> "))
       return <div key={i} style={{ borderLeft: "2px solid rgba(255,255,255,0.1)", paddingLeft: 12, margin: "4px 0", color: "#a1a1aa", fontSize: "0.92em" }} dangerouslySetInnerHTML={{ __html: html.slice(2) }} />;
+    if (line.startsWith("\u203A "))
+      return <div key={i} style={{ paddingLeft: 16, margin: "2px 0", color: "#d4d4d8" }} dangerouslySetInnerHTML={{ __html: html }} />;
     if (line.startsWith("- ") || line.startsWith("* "))
-      return <div key={i} style={{ paddingLeft: 16, margin: "2px 0", color: "#d4d4d8" }} dangerouslySetInnerHTML={{ __html: "\u203A " + html.slice(2) }} />;
+      return <div key={i} style={{ paddingLeft: 16, margin: "2px 0", color: "#d4d4d8" }} dangerouslySetInnerHTML={{ __html: "\u203A " + html.replace(/^[-*]\s/, "") }} />;
     if (line.trim() === "") return <div key={i} style={{ height: 8 }} />;
     return <div key={i} style={{ margin: "2px 0" }} dangerouslySetInnerHTML={{ __html: html }} />;
   });

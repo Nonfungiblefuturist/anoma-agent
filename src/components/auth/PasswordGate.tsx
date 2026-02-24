@@ -32,26 +32,45 @@ export function PasswordGate() {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-zinc-950">
+    <div
+      className="flex items-center justify-center h-screen"
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.06) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(20,20,22,1) 0%, #0a0a0b 100%)",
+      }}
+    >
       <form
         onSubmit={handleSubmit}
         className="flex flex-col items-center gap-4 w-full max-w-xs px-6"
       >
-        <div className="text-3xl mb-2">✦</div>
-        <h1 className="text-xl font-medium text-zinc-200">Anoma</h1>
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center mb-2"
+          style={{
+            background: "linear-gradient(135deg, #f59e0b, #ea580c, #e11d48)",
+            boxShadow: "0 12px 32px rgba(245,158,11,0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
+          }}
+        >
+          <span className="text-xl font-bold text-black">A</span>
+        </div>
+        <h1 className="text-xl font-semibold text-zinc-100">Anoma</h1>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
           autoFocus
-          className="w-full bg-zinc-800 text-zinc-100 rounded-xl px-4 py-3 text-sm outline-none placeholder-zinc-500 focus:ring-2 focus:ring-blue-500/50"
+          className="w-full rounded-2xl px-4 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/30 transition-colors glass-input"
+          style={{ background: "rgba(255,255,255,0.02)" }}
         />
         {error && <p className="text-red-400 text-sm">{error}</p>}
         <button
           type="submit"
           disabled={loading || !password}
-          className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-xl px-4 py-3 text-sm font-medium transition-colors"
+          className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
+            password
+              ? "text-black bg-gradient-to-r from-amber-400 to-orange-500 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98]"
+              : "text-zinc-500 bg-white/[0.04] cursor-not-allowed"
+          }`}
         >
           {loading ? "..." : "Enter"}
         </button>
