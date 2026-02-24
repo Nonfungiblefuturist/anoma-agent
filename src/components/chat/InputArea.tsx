@@ -14,7 +14,7 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
   const [text, setText] = useState("");
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const currentModel = MODELS.find((m) => m.id === selectedModel) ?? MODELS[0];
 
@@ -40,10 +40,13 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
     el.style.height = Math.min(el.scrollHeight, 140) + "px";
   };
 
+  // Close dropdown on outside click
   useEffect(() => {
     if (!modelMenuOpen) return;
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setModelMenuOpen(false);
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setModelMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -53,12 +56,11 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
 
   return (
     <div className="px-4 pb-5 pt-2">
-      <div className="max-w-3xl mx-auto relative">
-        {/* Model dropdown — rendered outside the overflow container */}
+      <div className="max-w-3xl mx-auto relative" ref={containerRef}>
+        {/* Model dropdown — positioned above the input bar */}
         {modelMenuOpen && (
           <div
-            ref={menuRef}
-            className="absolute bottom-full left-4 mb-3 w-52 rounded-2xl py-1 z-[60]"
+            className="absolute bottom-full left-4 mb-3 w-52 rounded-2xl py-1 z-50"
             style={{
               background: "rgba(14,14,16,0.95)",
               backdropFilter: "blur(40px)",
@@ -91,6 +93,7 @@ export function InputArea({ onSend, disabled, selectedModel, onModelChange }: In
           </div>
         )}
 
+        {/* Input bar */}
         <div
           className="relative rounded-[20px] glass-panel transition-all"
           style={{
